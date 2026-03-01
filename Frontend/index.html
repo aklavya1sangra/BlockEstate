@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlockEstate - Blockchain Based Land Record System</title>
+  <!-- professional font & icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f0f4f8;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #1e2f47;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 2.5rem;
+      box-shadow: 0 30px 50px -25px rgba(30, 79, 122, 0.25);
+      padding: 2.5rem;
+      border: 1px solid #e1e9f2;
+    }
+
+    /* header / emblem */
+    .gov-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e1e9f2;
+      padding-bottom: 1rem;
+    }
+    .gov-seal {
+      background: #1e4f7a;
+      color: white;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .title h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0a2942;
+    }
+    .title .badge {
+      background: #e6f0fa;
+      padding: 0.2rem 1.5rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      color: #1e4f7a;
+      font-weight: 600;
+    }
+
+    /* wallet bar */
+    .wallet-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      background: #f0f7ff;
+      border-radius: 60px;
+      padding: 0.4rem 0.4rem 0.4rem 2rem;
+      margin: 1.5rem 0 2rem;
+      border: 1px solid #c8d9f0;
+    }
+    .btn-connect {
+      background: #1e4f7a;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-connect:hover {
+      background: #0f3a5c;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(30, 79, 122, 0.3);
+    }
+    .btn-connect:disabled {
+      background: #a0b8d0;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .wallet-address {
+      background: white;
+      padding: 0.7rem 2rem;
+      border-radius: 40px;
+      font-family: monospace;
+      border: 1px solid #c8d9f0;
+      min-width: 180px;
+      text-align: center;
+    }
+
+    /* stats row */
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: #f5faff;
+      border: 1px solid #c8d9f0;
+      border-radius: 60px;
+      padding: 0.8rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-weight: 600;
+      color: #1e4f7a;
+    }
+    .stat i {
+      color: #1e4f7a;
+    }
+
+    /* two‑column cards (search/transfer) */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .card {
+      background: white;
+      border-radius: 2rem;
+      padding: 2rem;
+      border: 1px solid #d6e4f5;
+      box-shadow: 0 10px 18px -12px rgba(30, 79, 122, 0.1);
+    }
+    .card h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 2px dashed #c8d9f0;
+      padding-bottom: 0.8rem;
+      margin-bottom: 1.2rem;
+      color: #1e4f7a;
+    }
+    .input-group {
+      position: relative;
+      margin: 1.2rem 0;
+    }
+    .input-group i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7a9bcb;
+      z-index: 1;
+    }
+    input, select {
+      width: 100%;
+      padding: 1rem 1rem 1rem 2.8rem;
+      border-radius: 50px;
+      border: 1.5px solid #d6e4f5;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1e4f7a;
+    }
+    .btn {
+      background: #1e4f7a;
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #0f3a5c;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(30, 79, 122, 0.3);
+    }
+    .btn:disabled {
+      background: #a0b8d0;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-success {
+      background: #28a745;
+    }
+    .btn-success:hover {
+      background: #218838;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    /* result panel */
+    .result-panel {
+      background: #f5faff;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      border: 1px solid #c8d9f0;
+      margin: 2rem 0;
+    }
+
+    /* ========== ADMIN SECTION ========== */
+    .admin-section {
+      margin: 2rem 0 3rem;
+      background: #f5faff;
+      border-radius: 2rem;
+      padding: 2rem;
+      border: 2px solid #1e4f7a;
+      display: none;
+    }
+
+    .admin-section.visible {
+      display: block;
+      animation: slideDown 0.5s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #c8d9f0;
+    }
+
+    .admin-header i {
+      font-size: 2rem;
+      color: #1e4f7a;
+      background: white;
+      padding: 0.8rem;
+      border-radius: 1rem;
+      border: 1px solid #c8d9f0;
+    }
+
+    .admin-header h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1e4f7a;
+    }
+
+    .admin-badge {
+      background: #1e4f7a;
+      color: white;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 1rem;
+    }
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    /* Register Card */
+    .register-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      border: 1px solid #c8d9f0;
+      box-shadow: 0 5px 15px rgba(30, 79, 122, 0.05);
+    }
+
+    .register-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px dashed #c8d9f0;
+    }
+
+    .register-header i {
+      font-size: 1.8rem;
+      color: #1e4f7a;
+    }
+
+    .register-header h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1e4f7a;
+    }
+
+    .right-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Verify Card */
+    .verify-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      border: 1px solid #c8d9f0;
+      box-shadow: 0 5px 15px rgba(30, 79, 122, 0.05);
+    }
+
+    .verify-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px dashed #c8d9f0;
+    }
+
+    .verify-header i {
+      font-size: 1.8rem;
+      color: #1e4f7a;
+    }
+
+    .verify-header h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1e4f7a;
+    }
+
+    /* Dispute Card */
+    .dispute-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      border: 1px solid #c8d9f0;
+      box-shadow: 0 5px 15px rgba(30, 79, 122, 0.05);
+    }
+
+    .dispute-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px dashed #c8d9f0;
+    }
+
+    .dispute-header i {
+      font-size: 1.8rem;
+      color: #1e4f7a;
+    }
+
+    .dispute-header h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1e4f7a;
+    }
+
+    /* Admin Info */
+    .admin-info {
+      margin-top: 2rem;
+      background: white;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border: 1px solid #c8d9f0;
+    }
+
+    /* Status indicators */
+    .status-badge {
+      padding: 0.3rem 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+    
+    .status-pending { background: #e6f0fa; color: #1e4f7a; }
+    .status-verified { background: #d4edda; color: #155724; }
+    .status-dispute { background: #f8d7da; color: #721c24; }
+
+    /* Message container */
+    .message-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      max-width: 350px;
+    }
+    
+    .message {
+      padding: 0.8rem 1.2rem;
+      border-radius: 50px;
+      margin-bottom: 10px;
+      color: white;
+      font-weight: 500;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .message.success { background: #28a745; }
+    .message.error { background: #dc3545; }
+    .message.info { background: #1e4f7a; }
+    .message.warning { background: #ffc107; color: #333; }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Coming Soon Popup Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 2rem;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      animation: modalPop 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    @keyframes modalPop {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-icon {
+      font-size: 4rem;
+      color: #1e4f7a;
+      margin-bottom: 1rem;
+    }
+
+    .modal-icon i {
+      background: #e6f0fa;
+      padding: 1rem;
+      border-radius: 50%;
+    }
+
+    .modal-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e4f7a;
+      margin-bottom: 1rem;
+    }
+
+    .modal-message {
+      color: #4a6f8f;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .modal-update-box {
+      background: #e6f0fa;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .modal-update-box i {
+      color: #ffc107;
+      margin-right: 0.5rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-primary {
+      background: #1e4f7a;
+      color: white;
+    }
+
+    .modal-btn-primary:hover {
+      background: #0f3a5c;
+    }
+
+    .modal-btn-secondary {
+      background: #e6f0fa;
+      color: #1e4f7a;
+    }
+
+    .modal-btn-secondary:hover {
+      background: #c8d9f0;
+    }
+
+    .trust-section {
+      margin: 2rem 0 2rem;
+      background: white;
+      border-radius: 2.5rem;
+      padding: 3rem 2.5rem;
+      border: 1px solid #d0e2f7;
+      box-shadow: 0 25px 40px -20px rgba(30, 79, 122, 0.15);
+    }
+
+    .section-identity {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .section-identity i {
+      font-size: 2.5rem;
+      color: #1e4f7a;
+      background: #e6f0fa;
+      padding: 0.8rem;
+      border-radius: 1.5rem;
+    }
+    .section-identity h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e4f7a;
+      letter-spacing: -0.02em;
+    }
+    .section-identity .formal-badge {
+      background: #1e4f7a;
+      color: white;
+      padding: 0.2rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 1rem;
+    }
+
+    .formal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    .formal-card {
+      background: #f5faff;
+      border-radius: 2rem;
+      padding: 2rem 1.8rem;
+      border: 1px solid #c8d9f0;
+      transition: all 0.2s;
+      box-shadow: 0 8px 16px -12px rgba(30, 79, 122, 0.1);
+    }
+
+    .formal-card:hover {
+      border-color: #1e4f7a;
+      background: white;
+      box-shadow: 0 16px 24px -16px #1e4f7a;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 3px solid #c8d9f0;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title i {
+      font-size: 2rem;
+      color: #1e4f7a;
+    }
+    .card-title h4 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1e4f7a;
+    }
+
+    .formal-list {
+      list-style: none;
+    }
+    .formal-list li {
+      margin-bottom: 1.3rem;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .formal-list li strong {
+      color: #1e4f7a;
+      font-weight: 700;
+      display: inline-block;
+      min-width: 9rem;
+    }
+    .formal-list li .sub {
+      display: block;
+      margin-left: 2.2rem;
+      color: #4a6f8f;
+      font-weight: 400;
+      font-size: 0.95rem;
+      margin-top: 0.2rem;
+      border-left: 2px solid #c8d9f0;
+      padding-left: 0.8rem;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: #1e4f7a;
+      border-top: 2px solid #c8d9f0;
+      padding-top: 2rem;
+    }
+    
+    #backToTop {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1e4f7a;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 30px;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: none;
+    }
+    
+    @media (max-width: 900px) {
+      .formal-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .admin-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Coming Soon Popup Modal -->
+  <div class="modal-overlay" id="comingSoonModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h2 class="modal-title">Coming in Next Update</h2>
+      <div class="modal-message">
+        <p>The <strong id="featureName">Verify Land</strong> feature will be available in the next update.</p>
+        <div class="modal-update-box">
+          <i class="fas fa-clock"></i>
+          <strong>Expected Soon</strong>
+          <p style="margin-top: 0.5rem; font-size: 0.9rem;">We're working hard to bring you full functionality. Please check back later!</p>
+        </div>
+        <p style="font-size: 0.9rem;">In the meantime, you can still register and search for land records.</p>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-primary" onclick="closeComingSoonModal()">Got it</button>
+        <button class="modal-btn modal-btn-secondary" onclick="closeComingSoonModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Container -->
+  <div id="messageContainer" class="message-container"></div>
+
+  <!-- header with gov seal -->
+  <div class="gov-header">
+    <div class="gov-seal"><i class="fas fa-landmark"></i></div>
+    <div class="title">
+      <h1>BlockEstate - Blockchain Based Land Record System</h1>
+      <span class="badge"><i class="fas fa-check-circle"></i> Architecture · Infrastructure · Governance </span>
+    </div>
+  </div>
+
+  <!-- wallet bar -->
+  <div class="wallet-bar">
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <i class="fas fa-wallet" style="font-size:1.5rem; color:#1e4f7a;"></i>
+      <button class="btn-connect" onclick="connectWallet()" id="connectBtn">
+        <i class="fas fa-plug"></i> Connect wallet
+      </button>
+    </div>
+    <div id="walletAddress" class="wallet-address">
+      <i class="fas fa-circle" style="color:#7a8ea6;"></i> Not connected
+    </div>
+  </div>
+
+  <!-- stats -->
+  <div class="stats">
+    <div class="stat"><i class="fas fa-globe"></i> Decentralized</div>
+    <div class="stat"><i class="fas fa-link"></i> Blockchain Secured</div>
+    <div class="stat"><i class="fas fa-bolt"></i> Instant Access</div>
+    <div class="stat"><i class="fas fa-eye"></i> Transparent</div>
+  </div>
+
+  <!-- two main cards -->
+  <div class="grid-2">
+    <div class="card">
+      <h2><i class="fas fa-search"></i> Search Property</h2>
+      <div class="input-group">
+        <i class="fas fa-hashtag"></i>
+        <input type="number" id="searchId" placeholder="Enter Land ID">
+      </div>
+      <button class="btn" onclick="getLand()" id="searchBtn">
+        <i class="fas fa-file-lines"></i> Get Land Details
+      </button>
+    </div>
+    <div class="card">
+      <h2><i class="fas fa-exchange-alt"></i> Transfer Ownership</h2>
+      <div class="input-group">
+        <i class="fas fa-id-card"></i>
+        <input type="number" id="transferId" placeholder="Land ID">
+      </div>
+      <div class="input-group">
+        <i class="fas fa-address-card"></i>
+        <input type="text" id="newOwner" placeholder="New owner 0x...">
+      </div>
+      <button class="btn" onclick="transferOwnership()" id="transferBtn">
+        <i class="fas fa-pen"></i> Transfer
+      </button>
+    </div>
+  </div>
+
+  <!-- output panel -->
+  <div class="result-panel">
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 1rem;">
+      <i class="fas fa-scroll" style="color:#1e4f7a;"></i>
+      <span style="font-weight:600;">Land Record Details</span>
+    </div>
+    <div id="output" style="background:#f8f9fa; padding:1.5rem; border-radius:1.5rem; min-height: 150px;">
+      <i class="fas fa-search" style="color: #95a5a6;"></i> Search for a land record
+    </div>
+  </div>
+
+  <!-- ========== ADMIN SECTION ========== -->
+  <div class="admin-section" id="adminSection">
+    <div class="admin-header">
+      <i class="fas fa-user-shield"></i>
+      <h2>Administrator Portal <span class="admin-badge">Restricted Access</span></h2>
+    </div>
+
+    <div class="admin-layout">
+      <!-- Left side - Register Card -->
+      <div class="register-card">
+        <div class="register-header">
+          <i class="fas fa-plus-circle"></i>
+          <h3>Register New Land</h3>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-hashtag"></i>
+          <input type="number" id="adminId" placeholder="Land ID">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-map-pin"></i>
+          <input type="text" id="adminLocation" placeholder="Location">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-vector-square"></i>
+          <input type="number" step="0.01" id="adminArea" placeholder="Area (sq m)">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="adminOwner" placeholder="Owner Address 0x...">
+        </div>
+        <select id="adminType">
+          <option value="0">Private</option>
+          <option value="1">Public</option>
+          <option value="2">State Authority</option>
+          <option value="3">State Land</option>
+        </select>
+        <button class="btn btn-success" onclick="registerLand()" style="margin-top: 1.5rem;" id="registerBtn">
+          <i class="fas fa-save"></i> Register Land
+        </button>
+      </div>
+
+      <!-- Right side - Verify and Dispute stacked -->
+      <div class="right-stack">
+        <!-- Verify Card -->
+        <div class="verify-card">
+          <div class="verify-header">
+            <i class="fas fa-check-circle"></i>
+            <h3>Verify Land</h3>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-hashtag"></i>
+            <input type="number" id="verifyId" placeholder="Land ID to verify">
+          </div>
+          <button class="btn" onclick="showComingSoon('Verify Land')" id="verifyBtn">
+            <i class="fas fa-certificate"></i> Certify as Verified
+          </button>
+        </div>
+
+        <!-- Dispute Card -->
+        <div class="dispute-card">
+          <div class="dispute-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Mark Dispute</h3>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-hashtag"></i>
+            <input type="number" id="disputeId" placeholder="Enter Land ID to dispute">
+          </div>
+          <div id="landStatusPreview" style="margin: 10px 0; font-size: 0.9rem; min-height: 20px;"></div>
+          <button class="btn" onclick="showComingSoon('Mark Dispute')" id="disputeBtn">
+            <i class="fas fa-flag"></i> Flag Under Dispute
+          </button>
+          <button class="btn btn-secondary" onclick="checkLandBeforeDispute()" style="margin-top: 10px;" id="checkBtn">
+            <i class="fas fa-search"></i> Check Land First
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Status -->
+    <div class="admin-info" id="adminInfo">
+      <i class="fas fa-shield-alt" style="color: #1e4f7a;"></i>
+      <span id="adminAddress">Admin: Not Connected</span>
+    </div>
+  </div>
+
+  <!-- ========== FORMAL SECTION ========== -->
+  <div class="trust-section">
+    <div class="section-identity">
+      <i class="fas fa-balance-scale"></i>
+      <h3>Institutional framework <span class="formal-badge">Structure System Regime</span></h3>
+    </div>
+
+    <div class="formal-grid">
+      <!-- For Citizens card -->
+      <div class="formal-card">
+        <div class="card-title"><i class="fas fa-users"></i> <h4>For Citizens</h4></div>
+        <ul class="formal-list">
+          <li><strong>Ownership Certainty</strong> <span class="sub">Your land, your name, forever recorded</span></li>
+          <li><strong>Zero Fraud Risk</strong> <span class="sub">No fake documents, no identity theft</span></li>
+          <li><strong>Instant Verification</strong> <span class="sub">Check any property before buying</span></li>
+          <li><strong>From Home Access</strong> <span class="sub">No more standing in government queues</span></li>
+          <li><strong>Family Security</strong> <span class="sub">Records safe for future generations</span></li>
+        </ul>
+      </div>
+
+      <!-- For Government card -->
+      <div class="formal-card">
+        <div class="card-title"><i class="fas fa-landmark"></i> <h4>For Government</h4></div>
+        <ul class="formal-list">
+          <li><strong>Complete Authority</strong> <span class="sub">Admin controls all registrations</span></li>
+          <li><strong>Reduced Litigation</strong> <span class="sub">Fewer court cases over land</span></li>
+          <li><strong>Revenue Protection</strong> <span class="sub">Accurate tax collection</span></li>
+          <li><strong>Paperless Offices</strong> <span class="sub">No more file rooms or lost documents</span></li>
+          <li><strong>Citizen Trust</strong> <span class="sub">Transparent administration</span></li>
+        </ul>
+      </div>
+
+      <!-- For the Nation card -->
+      <div class="formal-card">
+        <div class="card-title"><i class="fas fa-map-marked-alt"></i> <h4>For the Nation</h4></div>
+        <ul class="formal-list">
+          <li><strong>Digital India Vision</strong> <span class="sub">E-Governance in action</span></li>
+          <li><strong>Economic Growth</strong> <span class="sub">Faster property transactions</span></li>
+          <li><strong>Banking Ready</strong> <span class="sub">Instant loan approvals</span></li>
+          <li><strong>Corruption Free</strong> <span class="sub">No middlemen, no bribes</span></li>
+          <li><strong>Global Standard</strong> <span class="sub">World-class land management</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- footer note -->
+  <div style="margin-top:2.5rem; background:#e6f0fa; border-radius:60px; padding:1rem 2rem; text-align:center; font-weight:500; color:#1e4f7a;">
+    <i class="fas fa-check-shield"></i> One Land, One Owner, One Truth — forever on blockchain
+  </div>
+
+  <!-- main footer -->
+  <div class="footer">
+    <p>BlockEstate · Blockchain Land Record System | <a href="#" onclick="scrollToTop();return false;" style="color:#1e4f7a;">Back to top ↑</a></p>
+    <p style="margin-top:0.3rem;">Government Land Registry · Secured on Blockchain · Built for Digital India</p>
+  </div>
+
+  <button id="backToTop" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
+</div>
+
+<script>
+  // CONTRACT ADDRESS
+  const contractAddress = "0x71fA2d2F45B85352C315be4Aa0970C9055E24daf";
+  
+  // COMPLETE CONTRACT ABI
+  const contractABI = [
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLand",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "markDispute",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_location",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_area",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "internalType": "uint8",
+          "name": "_landType",
+          "type": "uint8"
+        }
+      ],
+      "name": "registerLand",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "verifyLand",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
+
+  let provider, signer, contract;
+  let currentAdmin = null;
+  let usedIds = new Set();
+  let isWalletConnected = false;
+
+  // Coming Soon Modal functions
+  function showComingSoon(featureName) {
+    document.getElementById('featureName').textContent = featureName;
+    document.getElementById('comingSoonModal').style.display = 'flex';
+  }
+
+  function closeComingSoonModal() {
+    document.getElementById('comingSoonModal').style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('comingSoonModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  function showMessage(text, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    
+    let shortText = text;
+    if (text.includes('\n')) shortText = text.split('\n')[0];
+    if (shortText.length > 80) shortText = shortText.substring(0, 77) + '...';
+    
+    messageDiv.innerHTML = shortText;
+    container.appendChild(messageDiv);
+    
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 4000);
+  }
+
+  window.onscroll = () => { 
+    const b = document.getElementById("backToTop"); 
+    b.style.display = (document.documentElement.scrollTop > 300) ? "block" : "none"; 
+  };
+  
+  function scrollToTop() { 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }
+
+  async function connectWallet() {
+    if (!window.ethereum) { 
+      showMessage("Please install MetaMask", "error");
+      return; 
+    }
+    
+    const connectBtn = document.getElementById("connectBtn");
+    const originalText = connectBtn.innerHTML;
+    connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+    connectBtn.disabled = true;
+    
+    try {
+      // Request account access
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      // Initialize provider and signer
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      
+      // Initialize contract
+      contract = new ethers.Contract(contractAddress, contractABI, signer);
+      
+      const address = accounts[0];
+      
+      // Update UI immediately to show connected
+      document.getElementById("walletAddress").innerHTML = `<i class="fas fa-circle" style="color:#2ecc71;"></i> ${address.slice(0,6)}...${address.slice(-4)}`;
+      connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+      connectBtn.disabled = false;
+      isWalletConnected = true;
+      
+      // Auto-fill owner field
+      document.getElementById("adminOwner").value = address;
+      
+      try {
+        // Check if user is admin
+        currentAdmin = await contract.admin();
+        const adminSpan = document.getElementById("adminAddress");
+        const adminSection = document.getElementById("adminSection");
+        
+        if (address.toLowerCase() === currentAdmin.toLowerCase()) {
+          adminSection.classList.add('visible');
+          adminSpan.innerHTML = `Logged in as Admin: ${address.slice(0,6)}...${address.slice(-4)}`;
+          showMessage("Welcome Admin!", "success");
+          await loadExistingIds();
+        } else {
+          adminSection.classList.remove('visible');
+          adminSpan.innerHTML = `Current Admin: ${currentAdmin.slice(0,6)}...${currentAdmin.slice(-4)}`;
+        }
+      } catch (adminError) {
+        console.error("Admin check error:", adminError);
+      }
+      
+      showMessage("Wallet connected successfully!", "success");
+      
+      // Listen for account changes
+      window.ethereum.on('accountsChanged', function (accounts) {
+        if (accounts.length === 0) {
+          // User disconnected
+          document.getElementById("walletAddress").innerHTML = '<i class="fas fa-circle" style="color:#7a8ea6;"></i> Not connected';
+          document.getElementById("connectBtn").innerHTML = '<i class="fas fa-plug"></i> Connect wallet';
+          document.getElementById("adminSection").classList.remove('visible');
+          document.getElementById("adminAddress").innerHTML = 'Admin: Not Connected';
+          contract = null;
+          signer = null;
+          provider = null;
+          isWalletConnected = false;
+          showMessage("Wallet disconnected", "info");
+        } else {
+          // Account changed, reload to refresh state
+          window.location.reload();
+        }
+      });
+      
+      // Listen for chain changes
+      window.ethereum.on('chainChanged', () => {
+        window.location.reload();
+      });
+      
+    } catch (e) { 
+      console.error("Connection error:", e);
+      showMessage(e.message || "Connection failed", "error");
+      connectBtn.innerHTML = originalText;
+      connectBtn.disabled = false;
+    }
+  }
+
+  async function loadExistingIds() {
+    if (!contract) return;
+    
+    try {
+      usedIds.clear();
+      for (let i = 1; i <= 20; i++) {
+        try {
+          await contract.getLand(i);
+          usedIds.add(i.toString());
+        } catch (e) {
+          // Land doesn't exist
+        }
+      }
+      console.log("Loaded existing IDs:", Array.from(usedIds));
+    } catch (error) {
+      console.error("Error loading existing IDs:", error);
+    }
+  }
+
+  async function getLand() {
+    if (!contract) {
+      showMessage("Connect wallet first", "warning");
+      return;
+    }
+    
+    const id = document.getElementById("searchId").value;
+    if (!id) {
+      showMessage("Enter Land ID", "warning");
+      return;
+    }
+    
+    const searchBtn = document.getElementById("searchBtn");
+    const originalText = searchBtn.innerHTML;
+    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+    searchBtn.disabled = true;
+    
+    try {
+      const land = await contract.getLand(id);
+      const types = ["Private", "Public", "State Authority", "State Land"];
+      const statuses = ["Pending", "Verified", "Under Dispute"];
+      const statusColors = ["status-pending", "status-verified", "status-dispute"];
+      const st = Number(land[5]);
+      const typeIndex = Number(land[4]);
+      
+      document.getElementById("output").innerHTML = `
+        <div style="display:grid; grid-template-columns:120px 1fr; gap:0.8rem; align-items: start;">
+          <strong>ID:</strong> <span>${land[0].toString()}</span>
+          <strong>Location:</strong> <span>${land[1]}</span>
+          <strong>Area:</strong> <span>${land[2].toString()} sq m</span>
+          <strong>Owner:</strong> <span style="font-family: monospace;">${land[3]}</span>
+          <strong>Type:</strong> <span>${types[typeIndex]}</span>
+          <strong>Status:</strong> <span class="status-badge ${statusColors[st]}">${statuses[st]}</span>
+        </div>
+      `;
+      
+      showMessage(`Land ${id} found`, "success");
+      
+    } catch (error) {
+      console.error("Search error:", error);
+      
+      document.getElementById("output").innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: #dc3545; margin-bottom: 1rem;"></i>
+          <h3 style="color: #dc3545; margin-bottom: 0.5rem;">Land ${id} Not Found</h3>
+          <p style="color: #6c757d;">This land ID does not exist in the system.</p>
+        </div>
+      `;
+      showMessage(`Land ${id} not found`, "error");
+    } finally {
+      searchBtn.innerHTML = originalText;
+      searchBtn.disabled = false;
+    }
+  }
+
+  async function checkLandBeforeDispute() {
+    if (!contract) {
+      showMessage("Connect wallet first", "warning");
+      return;
+    }
+    
+    const id = document.getElementById("disputeId").value;
+    if (!id) {
+      showMessage("Enter Land ID", "warning");
+      return;
+    }
+    
+    const previewDiv = document.getElementById("landStatusPreview");
+    previewDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    
+    try {
+      const land = await contract.getLand(id);
+      const statuses = ["Pending", "Verified", "Under Dispute"];
+      const statusColors = ["#e6f0fa", "#d4edda", "#f8d7da"];
+      const st = Number(land[5]);
+      
+      let message = '';
+      if (st === 2) {
+        message = '⚠️ This land is already under dispute';
+      } else if (st === 1) {
+        message = '✅ This land is verified';
+      } else {
+        message = '⏳ This land is pending verification';
+      }
+      
+      previewDiv.innerHTML = `
+        <div style="background: ${statusColors[st]}; padding: 10px; border-radius: 8px;">
+          <strong>Status:</strong> ${statuses[st]}<br>
+          ${message}
+        </div>
+      `;
+      
+    } catch (error) {
+      previewDiv.innerHTML = `<div style="background:#f8d7da; padding:10px; border-radius:8px;">❌ Land ${id} not registered</div>`;
+    }
+  }
+
+  async function registerLand() {
+    if (!contract) {
+      showMessage("Connect wallet first", "warning");
+      return;
+    }
+    
+    const id = document.getElementById("adminId").value;
+    const location = document.getElementById("adminLocation").value;
+    const area = document.getElementById("adminArea").value;
+    const owner = document.getElementById("adminOwner").value;
+    const landType = document.getElementById("adminType").value;
+    
+    if (!id || !location || !area || !owner) {
+      showMessage("Fill all fields", "warning");
+      return;
+    }
+    
+    const registerBtn = document.getElementById("registerBtn");
+    const originalText = registerBtn.innerHTML;
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+    registerBtn.disabled = true;
+    
+    try {
+      // Check if user is admin
+      const admin = await contract.admin();
+      const signerAddress = await signer.getAddress();
+      
+      if (signerAddress.toLowerCase() !== admin.toLowerCase()) {
+        showMessage("Only admin can register", "error");
+        registerBtn.innerHTML = originalText;
+        registerBtn.disabled = false;
+        return;
+      }
+      
+      if (!ethers.utils.isAddress(owner)) {
+        showMessage("Invalid owner address", "error");
+        registerBtn.innerHTML = originalText;
+        registerBtn.disabled = false;
+        return;
+      }
+      
+      // Check if land already exists
+      try {
+        await contract.getLand(id);
+        showMessage(`Land ${id} already exists`, "error");
+        registerBtn.innerHTML = originalText;
+        registerBtn.disabled = false;
+        return;
+      } catch (e) {
+        // Land doesn't exist - good to proceed
+      }
+      
+      const tx = await contract.registerLand(id, location, area, owner, landType);
+      showMessage(`Registering land ${id}...`, "info");
+      await tx.wait();
+      showMessage(`Land ${id} registered successfully!`, "success");
+      
+      usedIds.add(id.toString());
+      
+      // Clear form
+      document.getElementById("adminId").value = "";
+      document.getElementById("adminLocation").value = "";
+      document.getElementById("adminArea").value = "";
+      
+    } catch (error) {
+      console.error("Registration error:", error);
+      
+      if (error.code === 'ACTION_REJECTED') {
+        showMessage("Transaction cancelled", "warning");
+      } else if (error.message.includes("Only admin allowed")) {
+        showMessage("Not authorized as admin", "error");
+      } else if (error.message.includes("already exists")) {
+        showMessage("Land ID already exists", "error");
+      } else {
+        showMessage("Registration failed: " + error.message.substring(0, 50), "error");
+      }
+    } finally {
+      registerBtn.innerHTML = originalText;
+      registerBtn.disabled = false;
+    }
+  }
+
+  async function transferOwnership() {
+    if (!contract) {
+      showMessage("Connect wallet first", "warning");
+      return;
+    }
+    
+    const id = document.getElementById("transferId").value;
+    const newOwner = document.getElementById("newOwner").value;
+    
+    if (!id) {
+      showMessage("Enter Land ID", "warning");
+      return;
+    }
+    if (!newOwner) {
+      showMessage("Enter New Owner Address", "warning");
+      return;
+    }
+    
+    if (!ethers.utils.isAddress(newOwner)) {
+      showMessage("Invalid Ethereum address", "error");
+      return;
+    }
+    
+    const transferBtn = document.getElementById("transferBtn");
+    const originalText = transferBtn.innerHTML;
+    transferBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transferring...';
+    transferBtn.disabled = true;
+    
+    try {
+      // Check if land exists
+      try {
+        await contract.getLand(id);
+      } catch (e) {
+        showMessage(`Land ${id} not found`, "error");
+        transferBtn.innerHTML = originalText;
+        transferBtn.disabled = false;
+        return;
+      }
+      
+      const tx = await contract.transferOwnership(id, newOwner);
+      showMessage(`Transferring land ${id}...`, "info");
+      await tx.wait();
+      showMessage(`Land ${id} transferred successfully!`, "success");
+      
+      document.getElementById("transferId").value = "";
+      document.getElementById("newOwner").value = "";
+      
+    } catch (error) {
+      console.error("Transfer error:", error);
+      
+      if (error.code === 'ACTION_REJECTED') {
+        showMessage("Transaction cancelled", "warning");
+      } else {
+        showMessage("Transfer failed: " + error.message.substring(0, 50), "error");
+      }
+    } finally {
+      transferBtn.innerHTML = originalText;
+      transferBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('disputeId').addEventListener('input', function() {
+    if (this.value) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        if (contract) checkLandBeforeDispute();
+      }, 500);
+    } else {
+      document.getElementById('landStatusPreview').innerHTML = '';
+    }
+  });
+
+  // Check if already connected on page load
+  window.addEventListener('load', async () => {
+    if (window.ethereum && window.ethereum.selectedAddress) {
+      await connectWallet();
+    }
+  });
+</script>
+</body>
+</html>
